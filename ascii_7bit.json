@@ -32,7 +32,7 @@
 {"US": [{"dec": "031"}, {"oct": "037"}, {"hex": "01F"}, {"BIN": "00011111"}, {"DESCRIPTION": "US(UnitSeparator)"}],
 {"SP": [{"dec": "032"}, {"oct": "040"}, {"hex": "020"}, {"BIN": "00100000"}, {"DESCRIPTION": "SP(Space)"}],
 {"!": [{"dec": "033"}, {"oct": "041"}, {"hex": "021"}, {"BIN": "00100001"}, {"DESCRIPTION": "!(exclamationmark)"}],
-{"\"": [{"dec": "034"}, {"oct": "042"}, {"hex": "022"}, {"BIN": "00100010"}, {"DESCRIPTION": ""(doublequote)"}],
+{"\"": [{"dec": "034"}, {"oct": "042"}, {"hex": "022"}, {"BIN": "00100010"}, {"DESCRIPTION": "\"(doublequote)"}],
 {"#": [{"dec": "035"}, {"oct": "043"}, {"hex": "023"}, {"BIN": "00100011"}, {"DESCRIPTION": "#(numbersign)"}],
 {"$": [{"dec": "036"}, {"oct": "044"}, {"hex": "024"}, {"BIN": "00100100"}, {"DESCRIPTION": "$(dollarsign)"}],
 {"%": [{"dec": "037"}, {"oct": "045"}, {"hex": "025"}, {"BIN": "00100101"}, {"DESCRIPTION": "%(percent)"}],
