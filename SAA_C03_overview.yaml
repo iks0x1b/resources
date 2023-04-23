@@ -1,0 +1,768 @@
+compute:
+  virtual_machines:
+    amazon ec2:
+      definition: IaaS Elastic Compute Cloud
+    amazon lightsail:
+      definition: vps service to match linode/vultr etc with more standard images
+    aws outpost: 
+      definition: 42U rack that lets you create EC2 based infrastructure on premise
+  serverless:
+    aws lambda: 
+      definition: microservices style functions as a service
+  orchestration:
+    aws elastic beanstalk:
+      definition: sold as full stack as a service
+    aws batch:
+      definition: Batch computing workloads service that overlays EC2 instances
+  container services:
+    aws fargate: 
+      definition: sold as serverless compute engine that works with ECS/EKS
+    amazon eks: 
+      definition: sold as Kubernetes as a service
+      limitations: Launches and orchestrates a pod/cluster using EC2 or Fargate
+    amazon ecs: 
+      definition: sold as Docker as a service
+      limitations: ECS tasks run from an EC2 or Fargate
+    amazon ecr: 
+      definition: sold as Managed container registry
+storage:
+  block_storage:
+    amazon ec2 instance store: >-
+      ephemeral storage local to the hypervisor that the compute resource is running on
+      low latency
+      useful for buffers/caches/minimal state machines
+      data loss on instance termination
+    amazon elastic block storage:
+      definition: floating mount that exists in the same availability zone as a compute resource
+      types:
+        ssd:
+          for IOPS
+          R/W operations
+          can be used as boot volume for EC2
+        hdd:
+          for large data transactions
+          favorable profile for throughput
+          cannot be used as boot volume for EC2
+  object_storage:
+    s3:
+      definition: >-
+        amazon simple storage service
+        durable, scalable
+        io occurs over the network via API
+    s3_glacier:
+      use_case: useful for rarely/never accessed files that are needed to meet regulatory requirements
+      types:
+        s3_glacier:
+          expedited (additional fee): 1-5 minutes
+          standard: 3-5 hours
+          bulk: 5-12 hours
+        s3_glacier_deep_archive:
+          expedited: N/A
+          standard: within 12 hours
+          bulk: within 48 hours
+  managed services:
+    amazon efs:
+      definition: "elastic file system"
+      limitations: defaults to nfs
+      blurb: is essentially a managed file share as a service
+      types:
+        efs_standard
+        efs_infrequent_access
+    fsx:
+      fsx_for_luster:
+        definition: nfs compatible storage for hpc applications
+        throughput: 100gbps
+        IOPS: 1million+ operations per second
+        integrations:
+          EC2
+          ECS
+          EKS (via CSI(container storage interface))
+      fsx_for_windows:
+        definition: fully managed windows file server for windows based hpc applications over SMB
+        features: AD integration/ SMB protocol
+    storage_gateway:
+      definition: integrates on premise storage with cloud based storage
+      types:
+        file_gateway:
+          store and retrieve objects in S3 using NFS/SMB
+          integrates with AD
+        volume_gateway:
+          definiton: EBS that somehow gets ISCI from aws on premise?
+          limitations: VM you host provides block storage via ISCI
+          types:
+            cached:
+              stores primary data in S3
+              stores frequently accessed data locally for latency benefit
+            stored:
+              everything is stored locally
+              asynchronously back up the data to S3
+        tape_gateway:
+          cloud based tape library
+          ISCI connection to tape gateway
+    aws backup:
+      fully managed backup service
+      automates FSX/EFS/DynamoDB/EC2 backups
+      automates Aurora/RDS/EBS/storage_gateway snapshots
+database:
+  relational:
+    products:
+      - amazon_rds: "amazon relation database service"
+        ownership_model: shared
+        aws_managed: hardware, patching, backups, maintenance
+        self_managed: ec2 instance type, network access
+        type: M$_sql_Server, MySql, MariaDB, PostgreSQL, Oracle, amazon_aurora, and more
+        features:
+          - "multi_az with read replication, standby and read replica DR"
+      - amazon_aurora: "database engine that runs on amazon_rds"
+        ownership_model: fully managed
+        self_managed: deployed as a "database cluster"
+        compatibility: mySql, PostgreSql
+        features:
+          - single master (automatic read replicas, rw to single instance)
+          - multi-master (rw to any node in cluster)
+        common_uses:
+          - online transactions 
+          - constantly changing data
+          - OLTP Online Transaction Processing Applications
+      - amazon_redshift: "fully managed data warehouse"
+        ownership_model: fully managed
+        self_managed: ???
+        compatibility: allows standard SQL queries
+        features:
+          - concurrency scaling(unlimited concurrent users and queries)
+          - redshift spectrum(query and retrieve structured data from S3)
+          - OLAP Online Analytical Processing
+    features:
+      ACID:
+        - atomicity
+        - consistency
+        - isolation
+        - durability
+  nonrelational:
+    nosql:
+      products:
+        - amazon_dynamoDB: fully managed NoSQL database service
+          table1:
+            keya: valuea
+            keyb: valueB
+          table2:
+            keyc: valuec
+            keyd: valued
+        - amazon_documentDB: fully managed MongoDB-compatible service
+          collection:
+            document1:
+              field1: value1
+              field2: value2
+              field3: value3
+            document2:
+              field11: value11
+              field12: value12
+              field13: value13
+            document3:
+              field21: value21
+              field22: value22
+              field23: value23
+  in_memory:
+    products:
+      amazon_elsticache:
+        types:
+          - redis:
+            features:
+              - replication
+          - memcached:
+            features:
+              - multithreaded
+              - no replication
+        features:
+          - easy integration
+          - data partitioning
+          - extremely low latency
+  specialty:
+    products:
+      - amazon_keyspaces: managed apache-cassandra
+      - amazon_neptune: managed graph database
+      - amazon_timestream: serverless time series database
+        common_uses:
+          - IOT
+          - operational applications
+      - amazon_QLDB: fully managed ledger database
+        common_uses:
+          - fully auditable history of all changes
+          - cryptographically verifiable transactions
+deployment:
+  - aws_cloudformation:
+    definition: IAC for aws resources
+    grouping:
+      within the same account: stack
+      between multiple accounts: stackset
+    tooling:
+      aws_cdk: cloud development kit
+      aws_sam: serverless application model
+  - aws_elastic_beanstalk:
+      definition:  managed platform as a service?
+      types:
+        web_server: static website, dynamic website, webapi
+        worker: long running or scheduled workflows
+  - aws_codedeploy:
+      definition:  fully managed deployment service
+      features:
+      - deploys applications to resources
+      - cannot provision aws resources
+  - amazon_ecs_anywhere:
+      definition:  fully managed docker orchestration service
+      features: somehow runs on your own hardware?
+  - amazon_eks_anywhere:
+      definition:  fully managed kubernetes orchestration service
+      features: somehow runs on your own hardware?
+  - aws_opsworks:
+      definition:  provides managed instances of chef && puppet services
+  - aws_proton:
+      definition:  managed service that automates container and serverless applications
+monitoring:
+  - CloudWatch:
+    logging_service_types:
+      cloudwatch_metrics:
+        - filter for general cloudwatch logs with averaging functionality
+        - shows builtin metrics for aws resources
+      cloudwatch_logs:
+        - monitoring service for your logs
+        - monitor, store, access, analyze, query
+        - cloudwatch agent extends resource logging for certain resources
+      cloudwatch_events:
+        - integrates with SNS
+        - can signal and invoke resources dynamically
+      cloudwatch_dashboards:
+        - eventbridge ++
+      cloudwatch_alarms:
+        - customizable dashboard in aws cloudwatch
+        - can create single pane of glass in different regions
+  - Service_health_dashboard:
+      - shows per service health status of all aws services
+  - Personal_health_dashboard:
+      - personalized version of service_health_dashboard with only the services leveraged in the account
+  - Health_api:
+      - programmatic access to your personal_health_dashboard
+      - only available in business or enterprise support plan
+audit_compliance:
+  - Cloudtrail:
+      - provides accountability
+      - primarily used for audits
+      -  stores audit data in s3 buckets
+      - logs management console, SDK, API, and CLI
+      - event_types:
+        management events:
+          - control_plane
+          - IAM/VPC/resource_creation
+        data_events:
+          - operations performed on or in a resource
+          - can function cross account to a shared account
+  - Artifact:
+      - self service
+      - ISO reports
+      - PCI reports
+      - SOC reports
+      - etc...
+  - security_hub:
+      - custom centralized view of the security rating from your leverage services
+      - integrates with many services such as:
+        - GuardDuty
+        - Inspector
+        - Macie
+        - IAM_access_analyzer
+        - AWS_firewall_manager
+networking_cdn:
+  services:
+    - amazon_vpc: "amazon virtual private cloud"
+      service: virtual network as a service
+      limitations: its a virtualized network, not sure how they will upsell you but they will...
+    - elastic_load_balancing: "its a load balancer"
+      types:
+        - alb: application load balancer
+          protocols: http/https/gprc
+          common_use: web_app, microservice, containers
+        - nlb: network load balancer
+          protocols: tcp/udp/tls
+          common_use: literally everything
+        - gwlb: gateway load balancer
+          protocols: ??? IP layer 3 traffic
+          common_use: runnning third party appliances in aws
+        - clb: classic load balancer
+          protocols: http/https/tcp/ssl/tls
+          common_use: legacy aws applications
+    - amazon_route_53:
+      service: aws dns as a service
+      features: integrates easily with aws resources and also has itegrated registrar and custom global CA
+    - aws_global_accelerator:
+      service: static anycast ip address
+      common_use: fronting multi region instances behind the same anycast address to reduce latency
+    - amazon_cloudfront:
+      service: global CDN
+      features: cdn caching with easy integration
+    - aws_privatelink:
+      service: vpc to vpc connectivity without egress to the internet
+    - aws_vpn:
+      service: standard ipsec vpn that annoyingly uses APIPA space for the TUN endpoints
+      types:
+        site-to-site: standard method of touching networks"
+        methods:
+          - "[remote] <-> [site-to-site-vpn-endpoint] <-> [virtual-private-gateway] <-> [aws-ntr]"
+          - "[remote] <-> [aws-transit-gateway] <-> [aws-ntr]"
+        client-vpn:
+        methods:
+          - "[remote] <-> [web-portal] <-> [client-vpn-endpoint] <-> [aws-ntr]"
+    - aws_directconnect:
+      service: dedicated physical or subleased port from secondary partner that enables directly connecting to AWS
+      limitations: limited to colos/public data centers or locations with partners
+    - aws_transit_gateway:
+      service: dmvpn/hub-spoke node as a service
+      common_uses: large scale aws deployments with 100+ vpcs and multiple physical data centers
+    - amazon_api_gateway:
+      service: fully managed service that makes it easy for developers to create, publish, maintain, monitor, and secure APIs
+      features: 
+        pricing: tiered pricing model, with a cost based on number of api requests and amount of data transferred out
+        integrates easily with services such as:
+          - EC2
+          - ECS
+          - AWS_FARGATE
+          - AWS_LAMBDA
+          - AWS_ELASTIC_BEANSTALK
+      function: is like CASB/rproxy service like APIGEE/Mulesoft
+    - aws_app_mesh:
+      description: >- 
+          application level netowrking for containerized applications
+          uses envoy as a service mesh proxies
+          used with microservices containers
+    - aws_cloud_map:
+      service: cloud resource discovery service
+      limitations: isnt needed if you have proper resource control...
+app_integration:
+  - amazon_sqs: amazon simple queue service
+    service: fully managed message queue service
+    benefits: easily consumed by ec2/lambda/ecs/other_aws_things
+    types:
+      - standard:
+        features:
+          - delivery at least once
+          - best effort ordering
+          - high throughput
+          - potential duplicates
+      - fifo:
+        features:
+          - first in first out, 1:1 queue
+          - limited throughput
+          - preserves exact order        
+  - amazon_sns: amazon simple notification service
+    service: a fully managed messaging and notification service
+    features:
+      pub/sub messaging patterns
+      message via push, email, or sms
+      multiple SQS queues can sub to a single SNS topic
+      builtin filtering via filtering policy attatched to topic
+  - amazon_step_functions: amazon statemachine managed service
+    service: a serverless function orchestrator for lambdas
+    features: allows for simple orchestration of potentially complex workflows
+  - amazon_mq: amazon message queue
+    service: managed message broker service
+    features: 
+      - asynchronous communication queue
+      - consumer of message has ability to delete the message
+      - like SQS with more messaging protocols
+      - supports JMS, .NET NMS, AMQP, MQTT, WebSocket, and more
+  - amazon_eventbridge: bridging events
+    service: serverless event bus service
+    features:
+      - enables easy linking of internal apps, SaaS apps, and AWS services
+      - uses the same service api as amazon cloudwatch events
+      - is intended for use by internal or 3rd party SaaS appliactions
+      - Suitable for event-drive applications
+  - AWS_app_sync: graphQL overlay for normal REST apis
+    service: manged service that accepts graphQL queries for non graphQL enabled back-ends?
+    features:
+      - see graphQL sales pitch
+      - schema based queries allow for single api calls to retrieve data that would take multiple
+      - introduces the concept of resolvers/schemas
+  - amazon_app_flow: fully managed integration service
+    service: data transfer between services
+    features:
+      - supports many popular SaaS applications such as:
+        - Salesforce
+        - Marketo
+        - Slack
+        - SeviceNow
+        - Etc..
+      - easily integrates with other AWS services
+security:
+  - aws_waf:
+    service: weba application firewall service
+    features:
+      - custom rules for common attack patterns
+      - integrations for cloudfront, application load balancer, api_gateway
+      - supports l3/l4 rules
+      - supports rate limiting rules via web acls attatched to cloudfront
+      - supports geo match conditions in web acls
+  - aws_firewall_manager:
+    service: security service for managing WAF rules across multiple accounts or apps
+    features:
+      - single pane of glass for entire enterprise
+  - aws_shield:
+    service: managed ddos protection service
+    features:
+      - can prevent udp reflection, syn flood, dns flood, http flood
+      - easy integration with ec2/elb/cloudfront/global_accellerator/route_53
+    types:
+      - standard: enabled by default for no charge
+      - advanced: surcharged service that provides ddos notifications and access to a support team
+  - aws_guardduty:
+    service: managed threat detection service
+    features:
+      - can identify malicious or unauthorized activities in accounts and workloads
+      - monitors api calls, crypto mining patterns, unauthorized deployment, or unusual logins
+      - can detect potentially compromised ec2 instances
+      - produces reports called "findings"
+      - sends notifications using cloudwatch events when a change was detected
+  - aws_cloudHSM:
+    service: fully managed cloud based "hardware" security module
+    features:
+      - crypto key vault hosted in ec2 instances
+      - limited to single tenant access
+      - can be used for SSL offload, CA private key protections, oracle TDE
+  - aws_kms:
+    service: fully managed key management service without explicit network component
+    feature:
+      - envelope encryption
+      - multi tenant
+      - cloudHSM can play the lifecycle manager for customer managed keys in the context of kms per account
+  - aws_secrets_manager:
+    service: managed password/api_key/auth vault
+    features:
+      - easily integrates wtih amazon_rds, amazon_document_db, etc
+      - RBAC
+      - not suitable for crypto keys
+  - amazon_macie:
+    service: data security and data privacy service
+    features:
+      - uses ML to automatically discover, classify, and protect sensitive data in S3 and other aws services
+      - recognizes PII regex patterns by default
+      - provides dashboards and alerts for discoveries
+  - aws_acm:
+    service: fully managed SSL/TLS manger
+    features:
+      - works for both public an private certs
+      - freely integrates with many aws services
+  - amazon_inspector:
+    service: automated security assessment service
+    features:
+      - automatically assess application for vulnerabilities or deviations from best practices
+      - automated security assessment reports
+      - robust and easy to use via console or API
+  - amazon_detective:
+    service: security investigation service
+    features:
+      - helps easily identify root cause of security issues
+      - collects cloudtrail, vpc flow logs, guardduty findings and other account data
+management_governance:
+  terms:
+  - sop: standard operating procedures
+  - hipaa: health insurance portability and accountability act of 1996
+  - gdpr: general data protection regulation
+  manage:
+    definition: control resources
+    tools:
+      - aws management console:
+          definition: web based interface
+          features: supports MFA
+          access: https[://]console.aws.amazon.com
+      - aws command line interface (CLI):
+          defintion: text based interface for terminals
+          features: supports unix shells, macos shell, and windows powershell
+      - aws console mobile application:
+          definition: official mobile app provided by AWS
+          features:
+            - supports notifications and dashboards
+            - default shows cloudwatch metrics, personal health dashboard, and aws billing
+            - does not provides all visibility as seen in web interface or cli
+      - aws systems manager (SSM):
+          definition: suite of various agents/services that run on amazon based resources to provide insight and access to their state.
+          features:
+            - allows you to control both aws and on premise based infrastructure.
+            - uses friendly language such as "patch manager", "state manager", "parameter store"
+      - aws resource access manager:
+          defintion: allows for sharing of resources between accounts inside and outside your organization
+          features:
+            - helps reduce duplicate resources
+  govern:
+    definition: enforce standards and ensure compliance
+    tools:
+      - aws config:
+        definition: managed service that allows you to assess, audit, and evalutate the configurations of your aws services
+        features:
+          - tracks changes to resources over time
+          - provides ability to identify highly granular data for attribution or post-mortem reports
+          - can provide data for automated notifcation and remediation using other aws services
+      - aws organizations (for multi account orgs):
+        definition: consolidated billing/management for multiple AWS accounts
+        features:
+          - enables RBAC scoped per account that can be managed in a single place
+      - aws service catalog:
+        definition: private centrally managed catalog of resources that are app roved for use in your organization
+      - aws control tower:
+        defintion: service to ease deployment of multiaccount aws environments
+        features:
+          - available best practice blueprints predefined
+          - sets actual guardrails with abstracted mandatory limitations called "guardrails"
+          - integrates with aws_config for pre-existing enforcement and remediation
+identity:
+  - aws_iam:
+    service: fully managed global identity and access management service
+    features:
+      - primary identity service for accounts
+      - abstracts access via users and groups
+      - additionally allows roles for elevating access for approved users or groups
+  - aws_cognito:
+    service: fully manages SAML or Oauth service
+    features:
+      - integrates with facebook, google, amazon, microsoft_AD, or any other service with SAML
+      - user_pool:
+        definition: used for authentication
+      - identity_pool:
+        definition: used for authorization
+  - aws_single_sign_on:
+    service: managed single sign on system
+    features:
+      - provides centralized user portal
+      - preconfigured SAML integrations for salesforce, O365, and others
+  - aws_directory_service:
+    service: managed microsoft active directory service
+    features:
+      - provides AD-controller like functionality without the overhead of managing the MS services
+      - connects to existing AD or AAD infrastructure using an "AD-connector"
+machine_learning:
+  types:
+  - ml_platform:
+    services:
+      - aws_sagemaker:
+        definition: full managed cloud platform for creating/training ML models
+  - computer_vision:
+    services:
+      - amazon rekognition:
+        definition: provides pre-trained OCR, face recognition, and object/context recognition from image files
+        features:
+          - allows for input of alternate ML engines
+      - amazon lookout for vision:
+        definition: provides pretrained image recognition ML for finding defects in industrial products
+        features:
+          - allows for custom training source data
+      - aws panorama:
+        definition: collection of ML devices and SDKs that integrate with ip cameras
+  - automated data analysis:
+    services:
+      - amazon textract:
+        definition: amazon manged OCR for importing text data from images
+      - amazon augmented AI(A2I):
+        definition: literally provides human review for workflows as a service, commonly used for image moderation
+      - amazon comprehend:
+        definition: amazon manged natural language processing service
+      - amazon comprehend medical:
+        definition: amazon manged natural language processing service with PHI recognition add on
+  - language ai:
+    services:
+      - amazon lex:
+        definition: framework to develop conversational chatbots
+        features:
+          - works with voice based or text based interfaces
+      - amazon transcribe:
+        definition: a speech-to-text transcription service
+      - amazon polly:
+        definition: a text-to-speech service
+        features:
+          - allows for custom pronounciation via upload of "lexicon" files
+  - customer experience improvement:
+    services:
+      - amazon kendra:
+        definition: intelligent search service
+        features:
+          - essentially a siri/ok google clone that can go through allowed resources in AWS
+      - amazon personalize:
+        definition: provides personalized reccomendations from historical behavoirs
+      - amazon translate:
+        definition: real time translation service between languages
+        features:
+          - allows for company and domain specific translations
+          - allows for control of tone to be set to a formal or informal tone
+  - business metrics:
+    services:
+      - amazon forecast:
+        definition: ML service that will forecast future outcomes from historical records
+        features:
+          - has built in datasets for common patterns
+      - amazon fruad detector:
+        definition: automated fraud detection process in applications
+      - amazon lookout for metrics:
+        definition: Detects anomalies in bussiness metrics
+        features:
+          - integrates easily with SNS
+  - devops & mlops:
+    services:
+      - amazon devops guru:
+        definition: detect abnormal behavoir in applications or aws resources
+        features:
+          - identifies issues in many aws services such as lambda or dynamoDB
+      - amazon codeguru reviewer:
+        definition: static code linting and analysis as a service
+      - amazon codeguru profiler:
+        definition: runtime analysis as a service that links back to changes in code
+      - amazon codeWhisperer:
+        definition: github copilot clone
+transfer_migration:
+  - aws datasync:
+    definition: online data transfer service
+    features:
+      - works over the internet or aws direct connect
+    limitations:
+      - needs a datasync agent (virtual machine you host)
+  - aws transfer:
+    definition: suite of services for file transfer to aws S3
+    features:
+      - works with multiple protocols such as:
+        - ftp
+        - ftps
+        - sftp
+  - aws snowball:
+    definition: offline data transfer options via physical appliances or devices
+    types:
+      - aws_snowcone:
+        definition: 8tb storage device that you can ship to push data to s3
+        features: works with NFS
+      - aws_snowball:
+        definition: 80tb storage device shipped as 10x aws snowcones in a case
+        features: sold as "petabyte scale"
+      - aws_snowmobile:
+        defintion: 100 petabyte storage semi truck that is probably just networked snowballs
+        features: sold as "exabyte scale"
+  - aws application discovery service:
+    definition: service to help plan migration projects
+    features:
+      - requires an agent on your servers...
+      - discovers all your applications
+  - aws database migration service:
+    definition: service to help migrate databases to AWS
+    features:
+      - allows original databases to remain fully operational during discovery
+      - supports schema translation
+  - aws server migration service:
+    definition: agentless service for planning migration of on premis workloads
+    features:
+      - the agent is hiding as vm in your virtualization environment that you must install
+  - aws migration hub:
+    definition: migration tracking dashboard as a service if you are using a migration tool
+  - aws migration evaluator:
+    definition: service to plan and forecast cost for running what you run on premise but in the cloud
+analytics:
+  terms:
+    - "data warehouse":
+        scopes:
+          - structured data
+    - "data lake":
+        scopes:
+          - structure data
+          - unstructured data
+  services:
+    - amazon kinesis:
+      definition: suite of services for analyzing data streams in real time
+      features:
+        - collect/transform/process/load/analyze data in real time
+      nested_services:
+        - amazon kinesis data stream:
+          definition: data transfer service for real time applications or real time signals of any type
+          features:
+            - maintains ordering
+            - similar to amazon sqs FIFO but faster
+          use cases:
+            - rtc backends
+            - clickstream dynamic ux for web apps
+            - iot sensor stream automation
+            - processing of financial transactions
+        - amazon kinesis data firehose:
+          definition: data transfer service for streaming data into S3/aws DB/ or any http endpoint
+          features:
+            - filters (for PHI or other sensitive data)
+            - third party integrations
+            - transformations of data prior to writing to storage
+        - amazon kinesis video streams:
+          definition: data transfer service for streaming services
+          features:
+            - stores, encrypts, and indexes video data
+            - robust easy to use apis for access to your video data
+        - amazon kinesis data analytics:
+          definition: serverless service for analyzing streaming data
+          features:
+            - highly scalable
+            - compliant with apache flink standards
+            - enables you to author and run code agaisnt streaming sources
+          use cases:
+            - near real time processing
+            - processing streaming data with low operational overhead
+            - analyzing location data points of gps applications
+    - amazon athena:
+      definition: interactive query service for data stored in amazon s3
+      features:
+        - allows an s3 bucket to be searched using standard SQL queries
+    - amazon elasticsearch:
+      definition: fully managed elasticsearch service
+      features:
+        - elasticsearch server as a service
+        - easily provision ELK stacks without managing any servers
+    - amazon elasticsearch mapreduce(EMR):
+      definition: fully managed big data platform
+      features:
+        - easily integrate with common open source tools/frameworks for big data analytics such as:
+          - hadoop
+          - flink
+          - hbase
+          - hcatalog
+          - hive
+          - spark
+          - jupyter
+          - oozie
+          - phoenix
+          - presto
+          - sqoop
+          - zepplin
+          - tensorflow
+      limitations:
+        - not serverless
+        - hidden costs as all resources are deployed in your account
+    - amazon quicksight:
+      definition: scalable, serverless, embeddable, ML powered business intelligence service
+      features:
+        - allows you to easily create and publish interactive dashboards that work with multiple browsers and devices
+    - amazon cloudsearch:
+      definition: a fully managed search service
+      features:
+        - allows for easily bolting on a search service to applications hosted in AWS
+    - amazon redshift:
+      definition: a fully managed data warehouse and analytics service
+      features: 
+        - petabyte scale queries
+        - exabyte scale analysis
+      limitations:
+        - not serverless
+        - hidden costs as all resources are deployed in your account
+    - amazon data pipeline:
+      definition: fully managed data transfer service between different aws compute and storage services
+    - amazon glue:
+      definition: fully managed serverless service used to extract, transform, and load data workloads
+      features: 
+        - abstracts multiple service based data sources via a defined "data catalog"
+    - amazon managed streaming for apache kafka:
+      definition: fully managed apache kafka service in aws
+      features:
+        - allows you use kafka apis to:
+          - stream changes and transforms occuring in databases
+          - populate s3 data lakes
+    - amazon lake formation:
+      definition: service that enables set up of secure data lakes
+      features:
+        - compatible with all aws services
+        - classifies and process data using "data catalogs" similar to data pipeline
+        - easily query established data lakes with athena/redshift/emr and other services
